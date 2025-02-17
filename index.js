@@ -39,6 +39,9 @@ app.use((req, res, next) => {
   });
 });
 
+//errorheandler
+app.use(errorhendler);
+
 //Routing
 app.get("/", (req, res) => res.send("Hello World!"));
 

@@ -1,36 +1,37 @@
 const http = require("http");
-const express = require("express");
-const app = express();
+//const { hello, greetings } = require("./helloWorld");
 const moment = require("moment");
+const express = require("express");
 const morgan = require("morgan");
-const errorhandler = require("errorhandler");
-const { users } = require("./users");
+// const errorhandler = require("errorhandler");
+const app = express();
+const routers = require("./routers");
+const path = require("path");
+const cors = require("cors");
 
 //Middleware
-app.use(morgan("tiny"));
-
-//Semua user
-app.get("/users", (req, res) => {
-  res.status(200).json({ users });
-});
-
-//User tertentu
-app.get("/users/:name", (req, res) => {
-  const { name } = req.params;
-  const user = users.find(
-    (user) => user.name.toLowerCase() === name.toLowerCase()
+const log = (req, res, next) => {
+  console.log(
+    moment().format("h:mm:ss a") + " " + req.originalUrl + " " + req.ip
   );
+  next();
+};
 
-  if (!user) {
-    return res.status(404).json({
-      message: "Data user tidak ditemukan",
-    });
-  }
+app.use(morgan("tiny"));
+// app.use(errorhandler);
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  cors({
+    origin: "http://127.0.0.1:5500",
+  })
+);
 
-  res.status(200).json(user);
-});
+//Routing
+app.use(routers);
 
-// Menangani routing 404
+//Middleware untuk 404
 app.use((req, res, next) => {
   res.status(404).json({
     status: "error",
@@ -38,19 +39,8 @@ app.use((req, res, next) => {
   });
 });
 
-// Error server
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    status: "error",
-    message: "terjadi kesalahan pada server",
-  });
-});
-
-app.use(errorhandler());
-
 const hostname = "127.0.0.1";
 const port = 3000;
-app.listen(port, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
-});
+app.listen(port, hostname, () =>
+  console.log(`Server running at http://${hostname}:${port}`)
+);
